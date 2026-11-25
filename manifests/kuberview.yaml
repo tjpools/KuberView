@@ -1,0 +1,94 @@
+# Run KuberView inside the cluster it monitors.
+#
+#   docker build -t kuberview:0.1.0 .
+#   kind load docker-image kuberview:0.1.0 --name kuberview
+#   kubectl apply -f manifests/kuberview.yaml
+#   kubectl -n kuberview port-forward svc/kuberview 8080:80
+#
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kuberview
+---
+# Identity the dashboard pod runs as
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kuberview
+  namespace: kuberview
+---
+# Least-privilege, read-only access to exactly what the app queries
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kuberview-reader
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "services", "namespaces", "nodes", "events"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kuberview-reader
+subjects:
+  - kind: ServiceAccount
+    name: kuberview
+    namespace: kuberview
+roleRef:
+  kind: ClusterRole
+  name: kuberview-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuberview
+  namespace: kuberview
+  labels:
+    app: kuberview
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kuberview
+  template:
+    metadata:
+      labels:
+        app: kuberview
+    spec:
+      serviceAccountName: kuberview
+      containers:
+        - name: kuberview
+          image: kuberview:0.1.0
+          # Image is side-loaded with `kind load`; never try to pull from a registry
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          readinessProbe:
+            httpGet:
+              path: /api/overview
+              port: 8000
+            initialDelaySeconds: 3
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kuberview
+  namespace: kuberview
+spec:
+  selector:
+    app: kuberview
+  ports:
+    - port: 80
+      targetPort: 8000

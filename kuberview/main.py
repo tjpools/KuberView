@@ -1,6 +1,7 @@
 """KuberView — a tiny Kubernetes dashboard built for learning.
 
-Talks to the cluster using the official `kubernetes` Python client and the
+Talks to the cluster using the official `kubernetes` Python client. When running
+inside a cluster it uses its ServiceAccount token; otherwise it falls back to the
 kubeconfig on this machine (same credentials kubectl uses).
 """
 
@@ -12,7 +13,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from kubernetes import client, config
 
-config.load_kube_config()
+try:
+    # Inside a pod: token + CA mounted at /var/run/secrets/kubernetes.io/serviceaccount
+    config.load_incluster_config()
+except config.ConfigException:
+    config.load_kube_config()
 
 core = client.CoreV1Api()
 apps = client.AppsV1Api()
