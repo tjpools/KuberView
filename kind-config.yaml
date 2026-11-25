@@ -1,0 +1,18 @@
+# kind cluster config for KuberView
+# Usage: kind create cluster --config kind-config.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: kuberview
+nodes:
+  - role: control-plane
+kubeadmConfigPatches:
+  # Default control-plane health-check timeout is 4m; on slower machines
+  # the apiserver/etcd can take longer to come up, so give it headroom.
+  - |
+    apiVersion: kubeadm.k8s.io/v1beta4
+    kind: InitConfiguration
+    timeouts:
+      controlPlaneComponentHealthCheck: 15m0s
+      kubeletHealthCheck: 10m0s
+      kubernetesAPICall: 15m0s
+      etcdAPICall: 15m0s

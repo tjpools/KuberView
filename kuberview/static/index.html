@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KuberView</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>⎈ KuberView</h1>
+    <div id="overview" class="overview"></div>
+    <label class="ns-picker">
+      Namespace
+      <select id="namespace">
+        <option value="">all</option>
+      </select>
+    </label>
+  </header>
+
+  <nav id="tabs">
+    <button data-tab="pods" class="active">Pods</button>
+    <button data-tab="deployments">Deployments</button>
+    <button data-tab="services">Services</button>
+    <button data-tab="nodes">Nodes</button>
+    <button data-tab="events">Events</button>
+  </nav>
+
+  <main>
+    <table id="table">
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </main>
+
+  <dialog id="logs-dialog">
+    <div class="dialog-head">
+      <strong id="logs-title"></strong>
+      <button id="logs-close">✕</button>
+    </div>
+    <pre id="logs-body"></pre>
+  </dialog>
+
+  <footer>auto-refresh every 5s · <span id="status"></span></footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
